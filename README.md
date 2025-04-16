@@ -126,6 +126,6 @@ LowPowerLogger/
 
 - Nick Gammon’s legendary guide: [gammon.com.au/power](http://www.gammon.com.au/power)
 - Adafruit for the RTC design inspiration
-
+- Disabling Square Wave and oscillator on RTC: https://forums.adafruit.com/viewtopic.php?t=45933
 ---
 
