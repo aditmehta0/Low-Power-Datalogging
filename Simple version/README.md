@@ -53,10 +53,6 @@ Every 10 minutes, the Arduino wakes up, powers on the SD card, saves 5 lines of 
 
 ---
 
-## Complete Arduino Code (VersionC.ino)
-
----
-
 # 🔋 Power Consumption Breakdown
 
 ## Arduino Pro Mini (3.3V, 8MHz)
