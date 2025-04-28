@@ -81,13 +81,14 @@ LowPowerLogger/
 ├──Code Example A&B
   ├── VersionA.ino        # Main Arduino sketch vA
   ├── VersionB.ino        # Main Arduino sketch vB
-├──Code Example C
-  ├── VersionC.ino        # Main Arduino sketch vC
 ├── schematic A&B
   ├── schematicA.png             # Circuit diagram A
   ├── schematicB.png             # Circuit diagram B
-├── schematic C
-  ├── schematicC.png             # Circuit diagram C
+├── Simple version
+  ├──Code Example C
+    ├── VersionC.ino        # Main Arduino sketch vC
+  ├── schematic C
+    ├── schematicC.png             # Circuit diagram C
 ```
 
 ---
