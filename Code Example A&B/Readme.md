@@ -1,4 +1,3 @@
-
 # Code Overview
 
 **Version A**
@@ -15,6 +14,6 @@ RTC Alarm Setting:
 After logging, an alarm is set for 10 minutes in the future. This alarm should trigger the external circuit (via the RTC’s INT/SQW pin) to reapply power.
 
 Power-Down / Deep Sleep:
-The Arduino + Sd Card power off is triggered over I2C when it is still powered by sending a reset command to RTC.
+The Arduino + Sd Card while it is still powered, power off is triggered over I2C by sending a reset alarm command to RTC.
 With external circuitry, the RTC alarm can fully power off the Arduino and SD card between logging sessions.
 
