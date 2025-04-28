@@ -17,3 +17,13 @@ Power-Down / Deep Sleep:
 The Arduino + Sd Card while it is still powered, power off is triggered over I2C by sending a reset alarm command to RTC.
 With external circuitry, the RTC alarm can fully power off the Arduino and SD card between logging sessions.
 
+### 📟 Bill of Materials 
+
+| Component        | Suggested Part                               |
+| ---------------- | -------------------------------------------- |
+| Microcontroller  | Arduino Pro Mini (3.3 V, 8 MHz) / ATmega328P |
+| RTC Module       | DS3231 (Adafruit or SparkFun)                |
+| SD Card Module   | SPI microSD module                           |
+| P-Channel MOSFET | IRLML6402 or similar                         |
+| Backup Battery   | CR2032 coin cell + holder                    |
+| Main Battery     | 3.7 V LiPo or 3×AA                           |
