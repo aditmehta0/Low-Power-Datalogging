@@ -22,18 +22,39 @@ The RTC powers on the Arduino and SD card via a P-Channel MOSFET, logging 5 rows
 
 ---
 
-### 🔋 Power Consumption Summary
+## ⚡ Power Consumption Breakdown (Version A)
 
-| Feature                 | Current          | Source/Note |
-| ----------------------- | ---------------- | ----------- |
-| RTC Standby (battery)    | ~1.2 µA          | DS3231 datasheet (battery mode) |
-| Arduino Pro Mini (Active)| ~3.6 mA           | After removing power LED and regulator |
-| SD Card Writing          | ~60–100 mA        | Depends on card quality |
-| Whole system (OFF)       | ~1.2 µA           | RTC only |
+| Phase                            | Current Estimate    | Notes                                          |
+| -------------------------------- | -------------------- | ---------------------------------------------- |
+| **RTC Standby (System Off)**      | ~1.2 µA              | Only RTC running on coin cell                  |
+| **MOSFET Turns ON → Boot Phase**  | ~15–20 mA            | Arduino boots up, SD initializes               |
+| **SD Card File Writing Phase**    | ~30–50 mA            | Writing 5 rows to microSD (short burst)         |
+| **RTC Alarm Setting Phase**       | ~3–5 mA              | RTC programmed for next 10-minute alarm        |
+| **System Shutdown (Cutoff)**      | back to ~1.2 µA      | Arduino, SD powered off, RTC standby only      |
 
-- **Typical event energy**: negligible between events (~1.2 µA).
-- **Logging phase**: active for ~1–2 seconds total (SD + Arduino).
-- **Battery life**: typically 6–12 months (LiFePO₄ or 3×AA).
+---
+
+## 📈 Energy Usage Estimation
+
+- **Active time** (Boot + Write + Setup) ≈ ~2 seconds per 600 seconds (10 minutes)
+- **Sleep time** (RTC only) ≈ ~598 seconds
+- **Average Current** ≈ 
+
+\[
+\text{Average} = (2\text{s} × 40\text{mA} + 598\text{s} × 1.2\mu\text{A}) ÷ 600\text{s}
+≈ 133\mu\text{A}
+\]
+
+---
+
+## 🔋 Battery Life Estimation
+
+| Battery Type        | Capacity (mAh) | Estimated Life        |
+| -------------------- | -------------- | ---------------------- |
+| 3.2V LiFePO₄ 14500   | ~1500 mAh       | ~11,000+ hours (~15 months) |
+| 3×AA NiMH (Eneloop)  | ~2000 mAh       | ~18–20 months          |
+
+✅ **Easily achieves 1+ year battery life** on modest-sized batteries!
 
 ---
 
@@ -125,8 +146,8 @@ If you skip this step, the RTC will output a continuous square wave instead of p
 
 ### 📚 References
 
-- [Nick Gammon - Power Management](http://www.gammon.com.au/power)
-- [DS3231 RTC Datasheet (Maxim Integrated)](https://datasheets.maximintegrated.com/en/ds/DS3231.pdf)
-- [Adafruit DS3231 RTC Guide](https://learn.adafruit.com/ds3231-precision-rtc-breakout)
-
+- [DS3231 RTC Datasheet](https://datasheets.maximintegrated.com/en/ds/DS3231.pdf)
+- [Nick Gammon's Low Power Techniques](http://gammon.com.au/power)
+- [Measured average SD write current](https://forum.arduino.cc/t/current-draw-of-microsd-card-module/623331/2)
+- [RTC SQW/Alarm Pin Behavior Details](https://forums.adafruit.com/viewtopic.php?t=45933)
 ---
