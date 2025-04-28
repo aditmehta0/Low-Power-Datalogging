@@ -1,140 +1,154 @@
-# 🌱 Ultra-Low Power Arduino Datalogger
+# 🌱 Ultra-Low Power Arduino Datalogger - Version C (Simple)
 
-**Accurate, battery-operated data logging with minimal power consumption**
+## Overview
+This project implements a simple low-power datalogger using:
+- Arduino Pro Mini (3.3V, 8MHz)
+- P-Channel MOSFET (NDP6020P)
+- microSD card module
+- Watchdog Timer (WDT) for wake-up
 
----
-
-### 📘 Overview
-
-This project implements a highly energy-efficient Arduino-based datalogger that logs sensor data every 10 minutes to a microSD card, then shuts down to save power.
-
-Two optimized variants:
-
-- **Version A**: Arduino Pro Mini + DS3231 RTC + SD card, with MOSFET power gating
-- **Version B**: Barebones ATmega328P +SD card + watchdog sleep, no RTC
-
-One basic variant: 
-- **Version C**:Arduino Pro Mini + P-channel MOSFET driven by a single GPIO pin + watchdog sleep, no RTC
----
-
-### 🚀 Features
-
-- ⏱ RTC- or WDT-triggered wakeups
-- 📂 Unique file logging every 10 minutes
-- 🔋 Sleep current as low as 0.1 µA
-- 🗕 RTC-based timestamps (optional)
-- 📆 Compact parts list with low BOM cost
+Every 10 minutes, the Arduino wakes up, powers on the SD card, saves 5 lines of data into a uniquely named file, and goes back to deep sleep. The SD card is properly powered off between events to conserve battery life.
 
 ---
 
-### 🔋 Power Consumption Comparison
-
-| Feature               | Version A (RTC + Pro Mini) | Version B (Barebones)   |
-| --------------------- | -------------------------- | ----------------------- |
-| **Sleep current**     | \~1.2 µA (RTC only)        | **\~0.1–0.35 µA**       |
-| **Logging current**   | \~15–40 mA                 | \~10–20 mA              |
-| **Wake mechanism**    | DS3231 RTC Alarm           | Watchdog Timer (WDT)    |
-| **Time accuracy**     | ±2 ppm                     | ±1–10%                  |
-| **Battery life**      | \~6–12 months              | **2–5+ years**          |
-| **Timestamp support** | ✅ Yes                      | ❌ No (unless RTC added) |
-| **Design complexity** | Moderate                   | Simple                  |
+## Features
+- Wake up every 10 minutes using WDT
+- Save 5 data entries to a uniquely named file (DATAxxx.CSV)
+- Sleep current: < 0.1 µA
+- Logging current: ~10-20 mA
+- Estimated battery life: 1-2+ years (LiFePO4 or 3xAA)
 
 ---
 
-### 🧐 Architecture
+## BOM (Bill of Materials)
 
-#### ⏱ Version A – RTC-Driven Logging
-
-- DS3231 RTC triggers alarm every 10 minutes via `SQW` pin
-- P-Channel MOSFET turns on Arduino + SD card
-- Arduino writes 5 rows to a **uniquely named file** (e.g., `DATA003.CSV`)
-- Arduino sets next alarm and **cuts its own power**
-
-#### 🧮 Version B – Barebones ATmega328P
-
-- Runs internal 8 MHz or 128 kHz oscillator
-- Watchdog timer sleeps in 8s chunks
-- After 10 minutes, logs data, then sleeps again
-- SD card optionally powered via GPIO or MOSFET
-- 
-#### 🧮 Version C – MOSFET driven SD card power off
----
-
-### 📟 Bill of Materials
-
-| Component        | Suggested Part                               |
-| ---------------- | -------------------------------------------- |
-| Microcontroller  | Arduino Pro Mini (3.3 V, 8 MHz) / ATmega328P |
-| RTC Module       | DS3231 (Adafruit or SparkFun)                |
-| SD Card Module   | SPI microSD module                           |
-| P-Channel MOSFET | IRLML6402 or similar                         |
-| Backup Battery   | CR2032 coin cell + holder                    |
-| Main Battery     | 3.7 V LiPo or 3×AA                           |
+| Component             | Suggested Part                              |
+|-----------------------|---------------------------------------------|
+| Microcontroller       | Arduino Pro Mini (3.3V, 8MHz)               |
+| SD Card Module        | SPI microSD module                         |
+| P-Channel MOSFET      | NDP6020P (TO-220 package)                   |
+| Battery               | 3.2V LiFePO4 14500 or 3xAA NiMH             |
+| Resistor 1            | 10kΩ pull-up for MOSFET gate               |
+| Resistor 2            | 100Ω in series to gate (optional protection) |
+| Capacitor (optional)  | 0.1 µF across SD module VCC/GND             |
 
 ---
 
-### 📁 Project Structure
+## Wiring
 
+| Arduino Pin   | Connected To                          |
+|---------------|----------------------------------------|
+| D4            | Gate of MOSFET (through 100Ω resistor) |
+| 3.3V Battery +| Source of MOSFET                      |
+| MOSFET Drain  | SD Module VCC                         |
+| GND           | GND (Arduino, SD module, Battery -)    |
+| D10           | SD Card CS pin                         |
+| D11           | SD Card MOSI                           |
+| D12           | SD Card MISO                           |
+| D13           | SD Card SCK                            |
+
+- Add a 10kΩ resistor between MOSFET Gate and Source.
+- 3.3V directly powers Pro Mini VCC pin.
+
+---
+
+## Basic Code Snippet
+
+This version uses the SdFat library instead of SD.h for reliable SD card reinitialization after each power cycle.
+
+```cpp
+#include <SPI.h>
+#include <SdFat.h>
+#include <avr/sleep.h>
+#include <avr/wdt.h>
+
+SdFat sd;
+File dataFile;
+
+const int MOSFET_CONTROL_PIN = 4;
+const int SD_CS_PIN = 10;
+const int WDT_INTERVALS = 75; // 8s * 75 = 10 minutes
+
+volatile int wdtCounter = 0;
+volatile bool shouldWakeUp = false;
+
+void setup() {
+  pinMode(MOSFET_CONTROL_PIN, OUTPUT);
+  digitalWrite(MOSFET_CONTROL_PIN, HIGH); // Turn off SD initially
+
+  ADCSRA &= ~(1 << ADEN);
+
+  MCUSR &= ~(1 << WDRF);
+  WDTCSR |= (1 << WDCE) | (1 << WDE);
+  WDTCSR = (1 << WDIE) | (1 << WDP3);
+
+  set_sleep_mode(SLEEP_MODE_PWR_DOWN);
+  sleep_enable();
+}
+
+ISR(WDT_vect) {
+  wdtCounter++;
+  if (wdtCounter >= WDT_INTERVALS) {
+    shouldWakeUp = true;
+    wdtCounter = 0;
+  }
+}
+
+void loop() {
+  if (shouldWakeUp) {
+    shouldWakeUp = false;
+
+    digitalWrite(MOSFET_CONTROL_PIN, LOW);
+    delay(50);
+
+    if (sd.begin(SD_CS_PIN)) {
+      String filename = generateFilename();
+      dataFile = sd.open(filename, FILE_WRITE);
+
+      if (dataFile) {
+        for (int i = 0; i < 5; i++) {
+          dataFile.println("Sample data line " + String(i + 1));
+        }
+        dataFile.close();
+      }
+    }
+
+    digitalWrite(MOSFET_CONTROL_PIN, HIGH);
+  }
+
+  sleep_cpu();
+}
+
+String generateFilename() {
+  int fileNumber = 0;
+  String filename;
+
+  do {
+    filename = "DATA" + String(fileNumber) + ".CSV";
+    fileNumber++;
+  } while (sd.exists(filename) && fileNumber < 1000);
+
+  return filename;
+}
 ```
-LowPowerLogger/
-├── README.md
-├──Code Example A&B
-  ├── VersionA.ino        # Main Arduino sketch vA
-  ├── VersionB.ino        # Main Arduino sketch vB
-├── schematic A&B
-  ├── schematicA.png             # Circuit diagram A
-  ├── schematicB.png             # Circuit diagram B
-├── Simple version
-  ├──Code Example C
-    ├── VersionC.ino        # Main Arduino sketch vC
-  ├── schematic C
-    ├── schematicC.png             # Circuit diagram C
-```
+---
+## Setup Instructions
+
+Wire Pro Mini, MOSFET, and SD card as described.
+
+Flash the code via an FTDI adapter (use 3.3V logic).
+
+Insert a formatted FAT32 microSD card.
+
+Power the system with a 3.2V LiFePO4 battery.
+
+Observe new files being created every 10 minutes.
 
 ---
 
-### 🛠 Setup Instructions
+## Notes
+Use SdFat instead of SD.h to avoid SD card initialization failure after reboot.
 
-1. Connect RTC, Arduino, SD card, and MOSFET as per schematic
-2. Flash code using FTDI or ISP programmer
-3. Insert a formatted microSD card
-4. Power via LiPo/+coin cell
-5. Observe new file creation every 10 minutes
+Always ensure the MOSFET cleanly turns off SD card power between events.
 
----
-
-### ⚙️ Recommended Sleep Settings (Barebones)
-
-- Use `SLEEP_MODE_PWR_DOWN`
-- Disable: ADC, Serial, BOD
-- Use: `power_all_disable()` to shut down internal peripherals
-- Use: 8s WDT + loop counter for \~10 min total sleep
-
----
-
-### ✅ Which Version to Choose?
-
-| Use Case                         | Best Version         |
-| -------------------------------- | -------------------- |
-| Need accurate timestamps         | RTC + Pro Mini       |
-| Want max battery life (>2 years) | Barebones ATmega328P |
-| Simple build                     | Barebones ATmega328P |
-| Easy prototyping                 | RTC + Pro Mini       |
-
----
-
-### 📸 Visuals
-
-- ✅ Added `schematicA.png` of RTC + MOSFET + SD card system
-- ✅ Added `schematicB.png` showing barebones logger build
-- ✅ Added `schematicC.png` showing basic build
-
----
-
-### 🤝 Credits
-
-- Nick Gammon’s legendary guide: [gammon.com.au/power](http://www.gammon.com.au/power)
-- Adafruit RTC design guide
-- Disabling Square Wave and oscillator on RTC: [adafruit.com forum]https://forums.adafruit.com/viewtopic.php?t=45933
----
-
+Use a pull-up resistor on the MOSFET gate to prevent accidental turn-on.
