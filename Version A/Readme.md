@@ -38,12 +38,7 @@ The RTC powers on the Arduino and SD card via a P-Channel MOSFET, logging 5 rows
 
 - **Active time** (Boot + Write + Setup) ≈ ~2 seconds per 600 seconds (10 minutes)
 - **Sleep time** (RTC only) ≈ ~598 seconds
-- **Average Current** ≈ 
-
-\[
-\text{Average} = (2\text{s} × 40\text{mA} + 598\text{s} × 1.2\mu\text{A}) ÷ 600\text{s}
-≈ 133\mu\text{A}
-\]
+- **Average Current** ≈ (2 seconds × 40 mA + 598 seconds × 1.2 µA) ÷ 600 seconds ≈ 133 µA average
 
 ---
 
