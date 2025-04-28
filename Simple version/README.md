@@ -57,6 +57,85 @@ Every 10 minutes, the Arduino wakes up, powers on the SD card, saves 5 lines of 
 
 ---
 
+# 🔋 Power Consumption Breakdown
+
+## Arduino Pro Mini (3.3V, 8MHz)
+- **Active Mode**: ~3.6 mA  
+  *Measured with power LED and voltage regulator removed.*  
+  **Source**: [IoT Experiments](https://www.iot-experiments.com/arduino-pro-mini-power-consumption/)
+
+- **Sleep Mode (SLEEP_MODE_PWR_DOWN)**: ~4.2 µA  
+  *With ADC and BOD disabled.*  
+  **Source**: [IoT Experiments](https://www.iot-experiments.com/arduino-pro-mini-power-consumption/)
+
+## Watchdog Timer (WDT)
+- **During Sleep**: ~6 µA  
+  *WDT adds around 6 µA extra consumption during sleep.*  
+  **Source**: [Arduino Forum](https://forum.arduino.cc/t/arduino-mini-pro-3-3v-8mhz-wake-up-go-to-sleep-times/689112)
+
+## microSD Card Module
+- **Write Operation**: ~60–100 mA  
+  *Depends on SD card model and write speed.*  
+  **Source**: [Gough's Tech Zone](https://goughlui.com/2021/02/27/experiment-microsd-card-power-consumption-spi-performance/)
+
+- **Idle (Card Inserted, Not Powered Down)**: ~0.2–2.5 mA  
+  *Some cards have higher leakage even when idle.*  
+  **Source**: [TI E2E Forum](https://e2e.ti.com/support/microcontrollers/msp-low-power-microcontrollers-group/msp430/f/msp-low-power-microcontroller-forum/604414/msp430g2553-how-to-reduce-power-consumption-while-using-micro-sd-card)
+
+- **Powered Off via MOSFET**: ~0 µA  
+  *SD card VCC is physically disconnected.*
+
+## P-Channel MOSFET (NDP6020P)
+- **Gate Leakage Current**: Negligible  
+  *Typically in the nA range.*  
+  **Source**: [NDP6020P Datasheet](https://www.onsemi.com/download/data-sheet/pdf/ndp6020p-d.pdf)
+
+---
+
+# 🔋 Power Consumption Analysis for Version C
+
+## Phase-by-Phase
+
+| Phase                    | Current            | Duration           | Notes                          |
+|---------------------------|--------------------|--------------------|--------------------------------|
+| Wake-up & Setup           | ~3.6 mA             | 5 ms               | Arduino wakes, no SD active    |
+| SD Power ON + Init        | ~60–80 mA           | 150 ms             | SD module powered ON, initialized |
+| File Write (5 lines)      | ~80–100 mA          | 250 ms             | Active SD write                |
+| File Close                | ~60 mA              | 50 ms              | Finalizing file                |
+| SD Power OFF              | ~3.6 mA             | Instantaneous      | Turn SD off via MOSFET         |
+| Sleep Mode (WDT active)   | ~10 µA              | 599 seconds (~10 min) | Ultra-low power sleeping |
+
+---
+
+## 📊 Energy Summary
+
+| Metric                 | Value                 |
+|-------------------------|------------------------|
+| Energy per 10 min cycle | ~0.0118 mAh             |
+| Energy per hour         | ~0.0708 mAh             |
+| Energy per day          | ~1.6992 mAh             |
+
+---
+
+## 🔋 Battery Life Estimation
+
+| Battery                  | Capacity   | Est. Lifetime        |
+|---------------------------|------------|----------------------|
+| 14500 LiFePO₄ (600 mAh)   | 600 mAh    | ~353 days (~0.97 yr) |
+| 3xAA NiMH (2000 mAh)      | 2000 mAh   | ~1176 days (~3.2 yr) |
+
+---
+
+## 📚 References
+- [IoT Experiments - Pro Mini Power](https://www.iot-experiments.com/arduino-pro-mini-power-consumption/)
+- [Gough's Tech Zone - SD Power Testing](https://goughlui.com/2021/02/27/experiment-microsd-card-power-consumption-spi-performance/)
+- [Arduino Forum - WDT Sleep](https://forum.arduino.cc/t/arduino-mini-pro-3-3v-8mhz-wake-up-go-to-sleep-times/689112)
+- [NDP6020P Datasheet](https://www.onsemi.com/download/data-sheet/pdf/ndp6020p-d.pdf)
+
+
+
+---
+
 ## Setup Instructions
 
 1. Wire Pro Mini, MOSFET, and SD card as described.
