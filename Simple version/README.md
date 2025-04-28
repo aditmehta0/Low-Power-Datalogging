@@ -1,4 +1,4 @@
-# 🌱 Ultra-Low Power Arduino Datalogger - Version C (Simple)
+# Ultra-Low Power Arduino Datalogger - Version C (Simple)
 
 ## Overview
 This project implements a simple low-power datalogger using:
@@ -28,9 +28,9 @@ Every 10 minutes, the Arduino wakes up, powers on the SD card, saves 5 lines of 
 | SD Card Module        | SPI microSD module                         |
 | P-Channel MOSFET      | NDP6020P (TO-220 package)                   |
 | Battery               | 3.2V LiFePO4 14500 or 3xAA NiMH             |
-| Resistor 1            | 10kΩ pull-up for MOSFET gate               |
-| Resistor 2            | 100Ω in series to gate (optional protection) |
-| Capacitor (optional)  | 0.1 µF across SD module VCC/GND             |
+| Resistor 1            | 10kΩ pull-up for MOSFET gate               |
+| Resistor 2            | 100Ω in series to gate (optional protection) |
+| Capacitor (optional)  | 0.1µF across SD module VCC/GND             |
 
 ---
 
@@ -38,7 +38,7 @@ Every 10 minutes, the Arduino wakes up, powers on the SD card, saves 5 lines of 
 
 | Arduino Pin   | Connected To                          |
 |---------------|----------------------------------------|
-| D4            | Gate of MOSFET (through 100Ω resistor) |
+| D4            | Gate of MOSFET (through 100Ω resistor) |
 | 3.3V Battery +| Source of MOSFET                      |
 | MOSFET Drain  | SD Module VCC                         |
 | GND           | GND (Arduino, SD module, Battery -)    |
@@ -47,14 +47,12 @@ Every 10 minutes, the Arduino wakes up, powers on the SD card, saves 5 lines of 
 | D12           | SD Card MISO                           |
 | D13           | SD Card SCK                            |
 
-- Add a 10kΩ resistor between MOSFET Gate and Source.
+- Add a 10kΩ resistor between MOSFET Gate and Source.
 - 3.3V directly powers Pro Mini VCC pin.
 
 ---
 
-## Basic Code Snippet
-
-This version uses the SdFat library instead of SD.h for reliable SD card reinitialization after each power cycle.
+## Complete Arduino Code (VersionC.ino)
 
 ```cpp
 #include <SPI.h>
@@ -131,24 +129,20 @@ String generateFilename() {
   return filename;
 }
 ```
+
 ---
+
 ## Setup Instructions
 
-Wire Pro Mini, MOSFET, and SD card as described.
-
-Flash the code via an FTDI adapter (use 3.3V logic).
-
-Insert a formatted FAT32 microSD card.
-
-Power the system with a 3.2V LiFePO4 battery.
-
-Observe new files being created every 10 minutes.
+1. Wire Pro Mini, MOSFET, and SD card as described.
+2. Flash the code via an FTDI adapter (use 3.3V logic).
+3. Insert a formatted FAT32 microSD card.
+4. Power the system with a 3.2V LiFePO4 battery.
+5. Observe new files being created every 10 minutes.
 
 ---
 
 ## Notes
-Use SdFat instead of SD.h to avoid SD card initialization failure after reboot.
-
-Always ensure the MOSFET cleanly turns off SD card power between events.
-
-Use a pull-up resistor on the MOSFET gate to prevent accidental turn-on.
+- Use SdFat instead of SD.h to avoid SD card initialization failure after reboot.
+- Always ensure the MOSFET cleanly turns off SD card power between events.
+- Use a pull-up resistor on the MOSFET gate to prevent accidental turn-on.
