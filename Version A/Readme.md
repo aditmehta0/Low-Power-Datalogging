@@ -1,148 +1,151 @@
-# 🌱 Ultra-Low Power Arduino Datalogger - Version A (RTC-based)
+# 🌱 Ultra-Low Power Arduino Datalogger
 
-**Accurate, battery-operated data logging with RTC-triggered wakeups and full system power shutdown**
+**Accurate, battery-operated data logging with minimal power consumption**
 
 ---
 
 ### 📘 Overview
 
-This project implements an ultra-low-power Arduino datalogger using a Real-Time Clock (RTC) to control system wake-ups every 10 minutes.  
-The RTC powers on the Arduino and SD card via a P-Channel MOSFET, logging 5 rows of data into a uniquely named file, then cleanly powers the entire system off.
+This project implements a highly energy-efficient Arduino-based datalogger that logs sensor data every 10 minutes to a microSD card, then shuts down to save power.
+
+Two optimized variants:
+
+- **Version A**: Arduino Pro Mini + DS3231 RTC + SD card, with MOSFET full system power gating
+- **Version B**: Barebones ATmega328P + SD card + watchdog sleep (no RTC)
+
+One basic variant:
+- **Version C**: Arduino Pro Mini + P-channel MOSFET driven by a single GPIO pin + watchdog sleep (no RTC)
 
 ---
 
 ### 🚀 Features
 
-- ⏱ RTC alarm-triggered wakeups (DS3231)
+- ⏱ RTC- or WDT-triggered wakeups
 - 📂 Unique file logging every 10 minutes
-- 🔋 Sleep current as low as 1.2 µA (RTC only)
-- 🛑 Full system shutdown between events
-- 📆 Highly accurate timestamps (±2 ppm)
-- 🗕 Low-cost, easy-to-source components
+- 🔋 Sleep current as low as 0.1–1.2 µA
+- 🗕 RTC-based timestamps (optional)
+- 📆 Compact parts list with low BOM cost
 
 ---
 
-## ⚡ Power Consumption Breakdown (Version A)
+### 🔋 Power Consumption Comparison
 
-| Phase                            | Current Estimate    | Notes                                          |
-| -------------------------------- | -------------------- | ---------------------------------------------- |
-| **RTC Standby (System Off)**      | ~1.2 µA              | Only RTC running on coin cell                  |
-| **MOSFET Turns ON → Boot Phase**  | ~15–20 mA            | Arduino boots up, SD initializes               |
-| **SD Card File Writing Phase**    | ~30–50 mA            | Writing 5 rows to microSD (short burst)         |
-| **RTC Alarm Setting Phase**       | ~3–5 mA              | RTC programmed for next 10-minute alarm        |
-| **System Shutdown (Cutoff)**      | back to ~1.2 µA      | Arduino, SD powered off, RTC standby only      |
-
----
-
-## 📈 Energy Usage Estimation
-
-- **Active time** (Boot + Write + Setup) ≈ ~2 seconds per 600 seconds (10 minutes)
-- **Sleep time** (RTC only) ≈ ~598 seconds
-- **Average Current** ≈ (2 seconds × 40 mA + 598 seconds × 1.2 µA) ÷ 600 seconds ≈ 133 µA average
-
----
-
-## 🔋 Battery Life Estimation
-
-| Battery Type        | Capacity (mAh) | Estimated Life        |
-| -------------------- | -------------- | ---------------------- |
-| 3.2V LiFePO₄ 14500   | ~1500 mAh       | ~11,000+ hours (~15 months) |
-| 3×AA NiMH (Eneloop)  | ~2000 mAh       | ~18–20 months          |
-
-✅ **Easily achieves 1+ year battery life** on modest-sized batteries!
+| Feature               | Version A (RTC + Pro Mini) | Version B (Barebones)   |
+| --------------------- | -------------------------- | ----------------------- |
+| **Sleep current**     | ~1.2 µA (RTC only)         | ~0.1–0.35 µA             |
+| **Logging current**   | ~15–40 mA                  | ~10–20 mA               |
+| **Wake mechanism**    | DS3231 RTC Alarm           | Watchdog Timer (WDT)    |
+| **Time accuracy**     | ±2 ppm                     | ±1–10%                  |
+| **Battery life**      | ~6–12 months               | ~2–5+ years             |
+| **Timestamp support** | ✅ Yes                     | ❌ No (unless RTC added) |
+| **Design complexity** | Moderate                   | Simple                  |
 
 ---
 
 ### 🧐 Architecture
 
-- RTC (DS3231) triggers alarm on SQW pin.
-- P-Channel MOSFET is normally OFF (SQW HIGH = OFF).
-- Alarm time (SQW LOW) → MOSFET ON → Arduino + SD powered.
-- Arduino logs data → sets next RTC alarm → disables SQW output.
-- Arduino loses power; system idles at RTC standby current (~1.2 µA).
+#### ⏱ Version A – RTC-Driven Logging
+- DS3231 RTC triggers alarm via SQW pin.
+- P-Channel MOSFET (NDP6020P) turns ON Arduino + SD Card.
+- Arduino writes 5 rows to a uniquely named file (e.g., `DATA003.CSV`).
+- Arduino programs next RTC alarm → System auto-powers OFF.
+- Sleep current during OFF state: ~1.2 µA (RTC only).
+
+#### 🧮 Version B – Barebones ATmega328P
+- Uses internal oscillator (8 MHz / 128 kHz).
+- Watchdog timer sleeps in 8s chunks.
+- After ~10 minutes, logs data to SD.
+- SD can be optionally power-gated via MOSFET or GPIO.
+
+#### 🧮 Version C – MOSFET driven SD card power off
+- No RTC used.
+- Watchdog timer wakes Arduino every ~10 minutes.
+- SD Card powered through P-MOSFET (NDP6020P) controlled via D4 pin.
+- Arduino sleeps deeply between loggings (~0.1 µA consumption).
 
 ---
 
 ### 📟 Bill of Materials
 
-| Component             | Suggested Part                            |
-| ---------------------- | ----------------------------------------- |
-| Microcontroller        | Arduino Pro Mini (3.3V, 8MHz)             |
-| RTC Module             | DS3231 Module (Adafruit, SparkFun, AliExpress) |
-| SD Card Module         | microSD SPI module                       |
-| P-Channel MOSFET       | NDP6020P (TO-220 for breadboard friendly) |
-| Pull-up Resistor       | 10kΩ Gate pull-up to battery +            |
-| Battery (Backup RTC)   | CR2032 coin cell + holder                 |
-| Battery (Main Power)   | 3.2V LiFePO₄ 14500 or 3×AA                |
-| Capacitor (optional)   | 0.1µF SD module VCC to GND (filter)       |
+| Component        | Version A                                  | Version C                        |
+| ---------------- | ------------------------------------------ | -------------------------------- |
+| Microcontroller  | Arduino Pro Mini (3.3 V, 8 MHz)            | Arduino Pro Mini (3.3 V, 8 MHz)  |
+| RTC Module       | DS3231 (Adafruit/SparkFun)                 | —                                |
+| SD Card Module   | microSD SPI module                         | microSD SPI module               |
+| P-Channel MOSFET | NDP6020P (TO-220)                          | NDP6020P (TO-220)                |
+| Pull-up Resistor | 10kΩ MOSFET gate pull-up                   | 10kΩ MOSFET gate pull-up         |
+| Capacitor        | 0.1µF VCC decoupling (optional)             | 0.1µF VCC decoupling (optional)  |
+| Backup Battery   | CR2032 for RTC                              | —                                |
+| Main Battery     | 3.2 V LiFePO₄ 14500 / 3×AA (NiMH preferred) | 3.2 V LiFePO₄ 14500 / 3×AA       |
 
 ---
 
-### 📋 Wiring
+### 📁 Project Structure
 
-| Arduino Pin   | Connected To                           |
-|---------------|-----------------------------------------|
-| VCC           | Drain of MOSFET (shared with SD Module) |
-| GND           | Ground (shared with battery - and SD)   |
-| D2            | RTC SQW output (input to Arduino for optional monitoring) |
-| I2C (A4, A5)  | RTC SDA, SCL lines                      |
-| D10           | SD Card CS                              |
-| D11           | SD Card MOSI                            |
-| D12           | SD Card MISO                            |
-| D13           | SD Card SCK                             |
-| Battery +     | Source of P-Channel MOSFET              |
-| MOSFET Gate   | RTC SQW pin (pulled up with 10kΩ resistor) |
-
-- Add a 10kΩ pull-up resistor between MOSFET Gate and battery +
-- 3.2V battery directly powers MOSFET Source
-- SD card and Arduino powered only during active phase
-
-✅ **Note**: Coin cell powers only the RTC backup Vbat pin.  
-✅ **Note**: Main battery powers the Arduino and SD Card via MOSFET.
+LowPowerLogger/ ├── README.md ├── Code Example A&B │ ├── VersionA.ino # Arduino sketch for Version A │ ├── VersionB.ino # Arduino sketch for Version B │ ├── schematicA.png # Circuit diagram for Version A │ ├── schematicB.png # Circuit diagram for Version B ├── Simple Version │ ├── VersionC.ino # Arduino sketch for Version C │ ├── schematicC.png # Circuit diagram for Version C │ ├── LowPowerVerC_SD_bb.jpg # Breadboard visual Version C
 
 ---
 
 ### 🛠 Setup Instructions
 
-1. Wire Arduino, RTC, SD Card, MOSFET exactly as shown in schematic.
-2. Remove the Arduino Pro Mini **power LED** and (optionally) **regulator** for best sleep performance.
-3. Flash Arduino sketch via FTDI adapter at 3.3V logic.
-4. Insert FAT32-formatted microSD card.
-5. Insert backup CR2032 for RTC module.
-6. Power the system with a 3.2V LiFePO₄ or 3×AA battery pack.
-7. System will create a uniquely named file every 10 minutes after wakeup!
+#### For Version A:
+1. Wire Arduino, RTC, SD Card, and MOSFET per schematicA.png.
+2. Remove Arduino Pro Mini **power LED** and optionally **regulator** for best sleep performance.
+3. Flash Arduino using FTDI adapter at 3.3V logic.
+4. Insert formatted FAT32 microSD card.
+5. Insert CR2032 coin cell into RTC module.
+6. Power the system with 3.2 V LiFePO₄ or 3×AA battery.
+7. The sketch will configure the RTC registers:
+   - Disable SQW continuous square wave output
+   - Enable RTC alarm interrupt
+8. System wakes every 10 minutes, saves 5 rows, then fully shuts off.
 
----
-
-### 🛠 RTC Initial Configuration (First Flash)
-
-> When you first upload your sketch or after battery replacement, you must configure the DS3231 control registers:
-
-- Disable continuous square wave output (SQWE = 0)
-- Disable 32kHz output (EN32kHz = 0)
-- Enable Alarm 1 interrupt (A1IE = 1)
-- Interrupts will pulse LOW when alarm matches
-
-✅ **No manual I2C register setup needed!**  
-✅ **The Arduino VersionA.ino sketch will automatically configure the RTC in `setup()`**.
-
-⚡ **Warning:**  
-If you skip this step, the RTC will output a continuous square wave instead of pulsing LOW at alarm time, and the system will never shut down.
+#### For Version C:
+1. Wire Arduino, SD Card, and MOSFET per schematicC.png.
+2. Remove Arduino Pro Mini **power LED** and optionally **regulator** for best sleep performance.
+3. Flash Arduino using FTDI adapter at 3.3V logic.
+4. Insert formatted FAT32 microSD card.
+5. Power via 3.2 V LiFePO₄ or 3×AA battery.
+6. System wakes every ~10 minutes using Watchdog Timer (WDT), logs 5 rows, and powers down SD between events.
 
 ---
 
 ### 📸 Visuals
 
-- ✅ Schematic showing RTC Alarm control of full system power
-- ✅ Full wiring diagram with battery, MOSFET, Arduino, SD card
-- ✅ Example data logs pending testing phase
+- ✅ `schematicA.png`: RTC triggers full power cycle
+- ✅ `schematicB.png`: Barebones WDT-driven logger
+- ✅ `schematicC.png`: Simplest GPIO-driven SD logger
+- ✅ `LowPowerVerC_SD_bb.jpg`: Breadboard build for Version C
+
+---
+
+### 🧮 Final Power Consumption Summary
+
+#### Version A:
+
+| Phase                  | Current Estimate    |
+| ----------------------- | ------------------- |
+| RTC Sleep (System OFF)  | ~1.2 µA             |
+| Wake and Log Phase      | ~30–50 mA           |
+| Average Current         | ~133 µA             |
+| Estimated Battery Life  | 12–18 months        |
+
+#### Version C:
+
+| Phase                  | Current Estimate    |
+| ----------------------- | ------------------- |
+| Sleep Mode             | ~0.1–0.35 µA         |
+| Wake and Log Phase      | ~20–30 mA           |
+| Average Current         | ~80–100 µA          |
+| Estimated Battery Life  | 2–5+ years          |
 
 ---
 
 ### 📚 References
 
 - [DS3231 RTC Datasheet](https://datasheets.maximintegrated.com/en/ds/DS3231.pdf)
-- [Nick Gammon's Low Power Techniques](http://gammon.com.au/power)
-- [Measured average SD write current](https://forum.arduino.cc/t/current-draw-of-microsd-card-module/623331/2)
-- [RTC SQW/Alarm Pin Behavior Details](https://forums.adafruit.com/viewtopic.php?t=45933)
+- [Nick Gammon’s Low Power Techniques](http://gammon.com.au/power)
+- [Using SdFat for reliable SD reboot handling](https://github.com/greiman/SdFat)
+- [RTC SQW/Alarm Details](https://forums.adafruit.com/viewtopic.php?t=45933)
+
 ---
