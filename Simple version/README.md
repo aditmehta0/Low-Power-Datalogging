@@ -3,7 +3,7 @@
 ## Overview
 This project implements a simple low-power datalogger using:
 - Arduino Pro Mini (3.3V, 8MHz)
-- P-Channel MOSFET (NDP6020P) (Intentionally picked for non-smd package)
+- P-Channel logic level MOSFET (NDP6020P) (Intentionally picked for non-smd package) https://www.onsemi.com/download/data-sheet/pdf/ndp6020p-d.pdf
 - microSD card module
 - Watchdog Timer (WDT) for wake-up
 
