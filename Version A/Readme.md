@@ -82,8 +82,9 @@ One basic variant:
 
 ### 📁 Project Structure
 
+```
 LowPowerLogger/ ├── README.md ├── Code Example A&B │ ├── VersionA.ino # Arduino sketch for Version A │ ├── VersionB.ino # Arduino sketch for Version B │ ├── schematicA.png # Circuit diagram for Version A │ ├── schematicB.png # Circuit diagram for Version B ├── Simple Version │ ├── VersionC.ino # Arduino sketch for Version C │ ├── schematicC.png # Circuit diagram for Version C │ ├── LowPowerVerC_SD_bb.jpg # Breadboard visual Version C
-
+```
 ---
 
 ### 🛠 Setup Instructions
