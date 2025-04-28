@@ -11,8 +11,10 @@ This project implements a highly energy-efficient Arduino-based datalogger that 
 Two optimized variants:
 
 - **Version A**: Arduino Pro Mini + DS3231 RTC + SD card, with MOSFET power gating
-- **Version B**: Barebones ATmega328P + watchdog sleep, no RTC
+- **Version B**: Barebones ATmega328P +SD card + watchdog sleep, no RTC
 
+One basic variant: 
+- **Version C**:Arduino Pro Mini + P-channel MOSFET driven by a single GPIO pin + watchdog sleep, no RTC
 ---
 
 ### 🚀 Features
@@ -54,7 +56,8 @@ Two optimized variants:
 - Watchdog timer sleeps in 8s chunks
 - After 10 minutes, logs data, then sleeps again
 - SD card optionally powered via GPIO or MOSFET
-
+- 
+#### 🧮 Version C – MOSFET driven SD card power off
 ---
 
 ### 📟 Bill of Materials
@@ -75,12 +78,16 @@ Two optimized variants:
 ```
 LowPowerLogger/
 ├── README.md
-├──Code Example
-  ├── VersionA.ino        # Main Arduino sketch
-  ├── VersionB.ino        # Main Arduino sketch
-├── schematic
+├──Code Example A&B
+  ├── VersionA.ino        # Main Arduino sketch vA
+  ├── VersionB.ino        # Main Arduino sketch vB
+├──Code Example C
+  ├── VersionC.ino        # Main Arduino sketch vC
+├── schematic A&B
   ├── schematicA.png             # Circuit diagram A
   ├── schematicB.png             # Circuit diagram B
+├── schematic C
+  ├── schematicC.png             # Circuit diagram C
 ```
 
 ---
@@ -110,7 +117,7 @@ LowPowerLogger/
 | -------------------------------- | -------------------- |
 | Need accurate timestamps         | RTC + Pro Mini       |
 | Want max battery life (>2 years) | Barebones ATmega328P |
-| Simplest build                   | Barebones            |
+| Simple build                     | Barebones ATmega328P |
 | Easy prototyping                 | RTC + Pro Mini       |
 
 ---
@@ -119,13 +126,14 @@ LowPowerLogger/
 
 - ✅ Added `schematicA.png` of RTC + MOSFET + SD card system
 - ✅ Added `schematicB.png` showing barebones logger build
+- ✅ Added `schematicC.png` showing basic build
 
 ---
 
 ### 🤝 Credits
 
 - Nick Gammon’s legendary guide: [gammon.com.au/power](http://www.gammon.com.au/power)
-- Adafruit for the RTC design inspiration
-- Disabling Square Wave and oscillator on RTC: https://forums.adafruit.com/viewtopic.php?t=45933
+- Adafruit RTC design guide
+- Disabling Square Wave and oscillator on RTC: [adafruit.com forum]https://forums.adafruit.com/viewtopic.php?t=45933
 ---
 
