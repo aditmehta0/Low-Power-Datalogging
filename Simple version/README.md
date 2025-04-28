@@ -28,8 +28,8 @@ Every 10 minutes, the Arduino wakes up, powers on the SD card, saves 5 lines of 
 | SD Card Module        | SPI microSD module                         |
 | P-Channel MOSFET      | NDP6020P (TO-220 package)                   |
 | Battery               | 3.2V LiFePO4 14500 or 3xAA NiMH             |
-| Resistor 1            | 10kΩ pull-up for MOSFET gate               |
-| Resistor 2            | 100Ω in series to gate (optional protection) |
+| Resistor 1            | 10kΩ pull-up for MOSFET gate               |
+| Resistor 2            | 100Ω in series to gate (optional protection) |
 | Capacitor (optional)  | 0.1µF across SD module VCC/GND             |
 
 ---
@@ -38,7 +38,7 @@ Every 10 minutes, the Arduino wakes up, powers on the SD card, saves 5 lines of 
 
 | Arduino Pin   | Connected To                          |
 |---------------|----------------------------------------|
-| D4            | Gate of MOSFET (through 100Ω resistor) |
+| D4            | Gate of MOSFET (through 100Ω resistor) |
 | 3.3V Battery +| Source of MOSFET                      |
 | MOSFET Drain  | SD Module VCC                         |
 | GND           | GND (Arduino, SD module, Battery -)    |
@@ -47,88 +47,12 @@ Every 10 minutes, the Arduino wakes up, powers on the SD card, saves 5 lines of 
 | D12           | SD Card MISO                           |
 | D13           | SD Card SCK                            |
 
-- Add a 10kΩ resistor between MOSFET Gate and Source.
+- Add a 10kΩ resistor between MOSFET Gate and Source.
 - 3.3V directly powers Pro Mini VCC pin.
 
 ---
 
 ## Complete Arduino Code (VersionC.ino)
-
-```cpp
-#include <SPI.h>
-#include <SdFat.h>
-#include <avr/sleep.h>
-#include <avr/wdt.h>
-
-SdFat sd;
-File dataFile;
-
-const int MOSFET_CONTROL_PIN = 4;
-const int SD_CS_PIN = 10;
-const int WDT_INTERVALS = 75; // 8s * 75 = 10 minutes
-
-volatile int wdtCounter = 0;
-volatile bool shouldWakeUp = false;
-
-void setup() {
-  pinMode(MOSFET_CONTROL_PIN, OUTPUT);
-  digitalWrite(MOSFET_CONTROL_PIN, HIGH); // Turn off SD initially
-
-  ADCSRA &= ~(1 << ADEN);
-
-  MCUSR &= ~(1 << WDRF);
-  WDTCSR |= (1 << WDCE) | (1 << WDE);
-  WDTCSR = (1 << WDIE) | (1 << WDP3);
-
-  set_sleep_mode(SLEEP_MODE_PWR_DOWN);
-  sleep_enable();
-}
-
-ISR(WDT_vect) {
-  wdtCounter++;
-  if (wdtCounter >= WDT_INTERVALS) {
-    shouldWakeUp = true;
-    wdtCounter = 0;
-  }
-}
-
-void loop() {
-  if (shouldWakeUp) {
-    shouldWakeUp = false;
-
-    digitalWrite(MOSFET_CONTROL_PIN, LOW);
-    delay(50);
-
-    if (sd.begin(SD_CS_PIN)) {
-      String filename = generateFilename();
-      dataFile = sd.open(filename, FILE_WRITE);
-
-      if (dataFile) {
-        for (int i = 0; i < 5; i++) {
-          dataFile.println("Sample data line " + String(i + 1));
-        }
-        dataFile.close();
-      }
-    }
-
-    digitalWrite(MOSFET_CONTROL_PIN, HIGH);
-  }
-
-  sleep_cpu();
-}
-
-String generateFilename() {
-  int fileNumber = 0;
-  String filename;
-
-  do {
-    filename = "DATA" + String(fileNumber) + ".CSV";
-    fileNumber++;
-  } while (sd.exists(filename) && fileNumber < 1000);
-
-  return filename;
-}
-```
 
 ---
 
@@ -139,6 +63,20 @@ String generateFilename() {
 3. Insert a formatted FAT32 microSD card.
 4. Power the system with a 3.2V LiFePO4 battery.
 5. Observe new files being created every 10 minutes.
+
+---
+
+## Requirements Mapping to Version C
+
+| Requirement             | Version C Implementation                    |
+|--------------------------|------------------------------------------------------------- |
+| MCU                      | Arduino Pro Mini (3.3V, 8 MHz)                               |
+| Sleep to save power      | Pro Mini sleeps in SLEEP_MODE_PWR_DOWN                       |
+| Wake every 10 minutes    | Use WWDT interrupt, 8s x 75 cycles                           |    
+| Data logging             | Save 5 rows into uniquely named file (e.g., DATA001.CSV)     |
+| Minimize SD card power   | SD card powered by P-MOSFET (NDP6020P) controlled by D4      |
+| Minimal idle current     | SD card and Pro Mini turned off between loggings, Pro Mini consumes <0.1 µA when asleep |
+| Robust SD handling       | Using SdFat library (not SD.h) to reliably reinitialize after power-off |
 
 ---
 
