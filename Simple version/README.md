@@ -22,33 +22,34 @@ Every 10 minutes, the Arduino wakes up, powers on the SD card, saves 5 lines of 
 
 ## BOM (Bill of Materials)
 
-| Component             | Suggested Part                              |
-|-----------------------|---------------------------------------------|
-| Microcontroller       | Arduino Pro Mini (3.3V, 8MHz)               |
-| SD Card Module        | SPI microSD module                         |
-| P-Channel MOSFET      | NDP6020P (TO-220 package)                   |
-| Battery               | 3.2V LiFePO4 14500 or 3xAA NiMH             |
-| Resistor 1            | 10kΩ pull-up for MOSFET gate               |
+| Component             | Suggested Part                               |
+|-----------------------|----------------------------------------------|
+| Microcontroller       | Arduino Pro Mini (3.3V, 8MHz)                |
+| SD Card Module        | SPI microSD module                           |
+| P-Channel MOSFET      | NDP6020P (TO-220 package)                    |
+| Battery               | 3.2V LiFePO4 14500 or 3xAA NiMH              |
+| Resistor 1            | 10kΩ pull-up for MOSFET gate                 |
 | Resistor 2            | 100Ω in series to gate (optional protection) |
-| Capacitor (optional)  | 0.1µF across SD module VCC/GND             |
+| Capacitor (optional)  | 0.1µF across SD module VCC/GND               |
 
 ---
 
 ## Wiring
 
-| Arduino Pin   | Connected To                          |
-|---------------|----------------------------------------|
-| D4            | Gate of MOSFET (through 100Ω resistor) |
-| 3.3V Battery +| Source of MOSFET                      |
-| MOSFET Drain  | SD Module VCC                         |
-| GND           | GND (Arduino, SD module, Battery -)    |
-| D10           | SD Card CS pin                         |
-| D11           | SD Card MOSI                           |
-| D12           | SD Card MISO                           |
-| D13           | SD Card SCK                            |
+| Arduino Pin        | Connected To                                |
+|--------------------|---------------------------------------------|
+| D4                 | Gate of MOSFET (through 100Ω resistor)      |
+| VCC (Pro Mini)     | 3.3V Battery + (direct connection)          |
+| 3.3V Battery +     | Source of P-MOSFET                          |
+| MOSFET Drain       | VCC of SD Module                            |
+| GND                | Common Ground (Arduino, SD module, Battery -) |
+| D10 (SS)           | SD Card CS pin                              |
+| D11 (MOSI)         | SD Card MOSI                                |
+| D12 (MISO)         | SD Card MISO                                |
+| D13 (SCK)          | SD Card SCK                                 |
 
-- Add a 10kΩ resistor between MOSFET Gate and Source.
-- 3.3V directly powers Pro Mini VCC pin.
+- Add a **10kΩ pull-up resistor** between MOSFET Gate and Source (keeps MOSFET off by default).
+- Insert a **100Ω resistor** between Arduino D4 and MOSFET Gate (optional, for ESD protection).
 
 ---
 
