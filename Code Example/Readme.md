@@ -1,8 +1,9 @@
 
 # Code Overview
 
+**Version A**
 Initialization:
-The SD power pin is configured to control a P‑channel MOSFET that supplies power to both the Arduino and SD card module.
+The RTC SQW pin is configured to control a P‑channel MOSFET that supplies power to both the Arduino and SD card module.
 
 The DS3231 RTC is initialized over I2C. (If the RTC isn’t running, you might want to initialize it with the current compile time.)
 
@@ -14,7 +15,6 @@ RTC Alarm Setting:
 After logging, an alarm is set for 10 minutes in the future. This alarm should trigger the external circuit (via the RTC’s INT/SQW pin) to reapply power.
 
 Power-Down / Deep Sleep:
-The SD card module is powered down by setting its control pin HIGH.
-The Arduino enters deep sleep in 8‑second intervals (75 times to equal roughly 10 minutes).
-
+The Arduino + Sd Card power off is triggered over I2C when it is still powered by sending a reset command to RTC.
 With external circuitry, the RTC alarm can fully power off the Arduino and SD card between logging sessions.
+
