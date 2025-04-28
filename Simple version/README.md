@@ -1,5 +1,9 @@
 # Ultra-Low Power Arduino Datalogger - Version C (Simple)
 
+![Schematic Diagram - Version C](LowPowerVerC_SD_bb.jpg)
+
+> 📜 *Version C circuit schematic: Arduino Pro Mini + SD card + P-MOSFET power gating.*
+
 ## Overview
 This project implements a simple low-power datalogger using:
 - Arduino Pro Mini (3.3V, 8MHz)
