@@ -78,13 +78,11 @@ One basic variant:
 ```
 LowPowerLogger/
 ├── README.md
-├──Code Example A&B
+├──Version A
   ├── VersionA.ino        # Main Arduino sketch vA
-  ├── VersionB.ino        # Main Arduino sketch vB
-├── schematic A&B
-  ├── schematicA.png             # Circuit diagram A
-  ├── schematicB.png             # Circuit diagram B
-├── Simple version
+├──Version B
+  ├── VersionB.ino        # Main Arduino sketch vBB
+├── Simple version C
   ├──Code Example C
     ├── VersionC.ino        # Main Arduino sketch vC
   ├── schematic C
