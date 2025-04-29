@@ -28,15 +28,16 @@ We use the **MCP1700-33** LDO (3.3 V, 250 mA, 1.6 µA quiescent, 178 mV dropout)
 
 ## 📟 Bill of Materials
 
-| Component           | Specification & Notes                                                                                     |
-|---------------------|-----------------------------------------------------------------------------------------------------------|
-| **MCU**             | ATmega328P @ 8 MHz (Optiboot-bootloaded)                                                                  |
-| **LDO**             | MCP1700-33 (3.3 V, 250 mA, 1.6 µA I<sub>Q</sub>) :contentReference[oaicite:7]{index=7}                                  |
-| **MOSFET**          | IRLML6402 (P-channel, V<sub>DS</sub>=20 V, R<sub>DS(on)</sub>< 75 mΩ @ V<sub>GS</sub>=–2.5 V) :contentReference[oaicite:8]{index=8} |
-| **Pull-up resistors**| 10 kΩ on RESET :contentReference[oaicite:9]{index=9}, 10 kΩ on MOSFET gate, 100 Ω series MOSFET gate (optional)               |
-| **Decoupling caps** | 0.1 µF on MCU VCC/GND :contentReference[oaicite:10]{index=10}; 4.7 µF on LDO VIN/VOUT :contentReference[oaicite:11]{index=11}                        |
-| **Crystal & caps**  | 8 MHz crystal + 22 pF × 2 to GND                                                                          |
-| **SD module**       | SPI microSD breakout                                                                                      |
+| Component                | Specification & Notes                                                                                               | Reference |
+|--------------------------|---------------------------------------------------------------------------------------------------------------------|:---------:|
+| **ATmega328P MCU**       | Barebones DIP, 8 MHz Optiboot-bootloaded                                                                            |    [8]    |
+| **LDO**                  | MCP1700-33 (3.3 V, 250 mA, 1.6 µA I<sub>Q</sub>)                                                                    |    [3]    |
+| **P-Channel MOSFET**     | IRLML6402 (V<sub>DS</sub>=20 V, R<sub>DS(on)</sub><75 mΩ @ V<sub>GS</sub>=–2.5 V)                                   |   [4][5]  |
+| **Pull-up Resistors**    | 10 kΩ on RESET (PC6), 10 kΩ on MOSFET gate; 100 Ω series on MOSFET gate (optional for gate protection)              |    [7]    |
+| **Decoupling Capacitors**| 0.1 µF on VCC/GND near MCU and SD module; 4.7 µF on LDO VIN→VOUT                                                    |    [3]    |
+| **Crystal & Caps**       | 8 MHz crystal with two 22 pF caps to GND                                                                            |    [1]    |
+| **microSD Module**       | SPI microSD breakout                                                                                                |    [6]    |
+| **Battery**              | 3×AA NiMH (≈4.0 V) or single-cell LiPo (3.7 V) feeding LDO VIN                                                      |    —      |
 
 ---
 
@@ -59,14 +60,14 @@ We use the **MCP1700-33** LDO (3.3 V, 250 mA, 1.6 µA quiescent, 178 mV dropout)
 
 ## 🔌 Power-Saving Techniques
 
-1. **Barebones board** (no reg/LED): saves ~30.5 mA :contentReference[oaicite:13]{index=13}  
-2. **Sleep mode:** SLEEP_MODE_PWR_DOWN saves ~15.7 mA :contentReference[oaicite:14]{index=14}  
-3. **Disable ADC:** `ADCSRA = 0;` saves ~334 µA :contentReference[oaicite:15]{index=15}  
-4. **Disable BOD (software):** timed `MCUCR` sequence saves ~25 µA :contentReference[oaicite:16]{index=16}  
-5. **Power Reduction Register:** `power_all_disable();` saves ~7.6 mA :contentReference[oaicite:17]{index=17}  
-6. **Pins OUTPUT/LOW:** unused pins as outputs low save ~2 µA :contentReference[oaicite:18]{index=18}  
-7. **Watchdog overhead:** ~6.2 µA during sleep :contentReference[oaicite:19]{index=19}  
-8. **8 MHz crystal clock:** balanced speed/stability :contentReference[oaicite:20]{index=20}  
+1. **Barebones board (no reg/LED):** saves ~30.5 mA [1]  
+2. **Sleep mode (SLEEP_MODE_PWR_DOWN):** saves ~15.7 mA [1]  
+3. **Disable ADC (ADCSRA = 0):** saves ~334 µA [1]  
+4. **Disable BOD (software via MCUCR):** saves ~25 µA [1]  
+5. **Power Reduction Register (power_all_disable()):** saves ~7.6 mA [1]  
+6. **Pins OUTPUT/LOW:** unused pins as outputs low save ~2 µA [1]  
+7. **Watchdog overhead:** ~6.2 µA during sleep [2]  
+8. **8 MHz crystal clock:** balanced speed/stability [1]  
 
 ---
 
@@ -135,22 +136,37 @@ void loop() {
 }
 ```
 ---
-## ⚡ Power Consumption Breakdown
+## ⚡ Power Consumption Breakdown (Version B)
 
-|   Phase               | Current  |       Description            | 
-|-----------------------|----------|------------------------------|
-| Boot & SD write (2 s) | ~40 mA   | SD card write burst          |
-| WDT sleep overhead    | ~6.2 µA  | Watchdog interrupt & timer   |
-| Deep sleep (598 s)    | ~0.36 µA | MCU in PWR_DOWN, ADC/BOD off |
+|   Phase                | Current Estimate | Description                    |
+|-------------------------|------------------|--------------------------------|
+| Boot & SD write (2 s)    | ~40 mA            | SD card initialized and 5 rows written |
+| WDT sleep overhead       | ~6.2 µA           | Watchdog Timer interrupt active |
+| Deep sleep (598 s)       | ~0.36 µA          | MCU in SLEEP_MODE_PWR_DOWN, ADC off, BOD off, all peripherals disabled |
 
+---
+
+## 📈 Energy Usage Estimation
+
+- **Active time** (Boot + Write) ≈ ~2 seconds per 600 seconds (10 minutes)
+- **Sleep time** ≈ ~598 seconds
+- **Average Current Consumption**:
+$$
+\text{Average} = \frac{(2\text{s} \times 40\text{mA}) + (598\text{s} \times 0.36\mu\text{A})}{600\text{s}} \approx 133\mu\text{A}
+$$
 ---
 
 ## 🔋 Battery Life Estimates
 
-|      Battery          | Capacity | Runtime (~0.133 mA avg)            |
-|-----------------------|----------|------------------------------------|
-|  3×AA NiMH (1900 mAh) | 1900 mAh | ~1900/0.133 ≈ 14,285 h (≈595 days) |
-|  LiPo 1500 mAh        | 1500 mAh | ~1500/0.133 ≈ 11,278 h (≈470 days) |
+| Battery Type           | Capacity (mAh) | Estimated Runtime (based on ~133 µA avg) |
+|-------------------------|----------------|------------------------------------------|
+| 3×AA NiMH (Eneloop)     | 1900 mAh        | ≈ 14,285 hours (≈595 days ≈1.6 years)    |
+| Single-cell LiPo (3.7V) | 1500 mAh        | ≈ 11,278 hours (≈470 days ≈1.3 years)    |
+
+---
+
+✅ **Result:**  
+Even on modest battery packs, **over 1–1.5 years** of continuous unattended operation is realistically achievable!
 
 ---
 
