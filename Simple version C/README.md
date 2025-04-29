@@ -164,3 +164,5 @@ Every 10 minutes, the Arduino wakes up, powers on the SD card, saves 5 lines of 
 - Use SdFat instead of SD.h to avoid SD card initialization failure after reboot.
 - Always ensure the MOSFET cleanly turns off SD card power between events.
 - Use a pull-up resistor on the MOSFET gate to prevent accidental turn-on.
+- Choose SD card module without LED or remove it.
+- Remove power LED from MCU board
