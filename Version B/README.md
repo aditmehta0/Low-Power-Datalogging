@@ -146,14 +146,16 @@ void loop() {
 
 ---
 
-## 📈 Energy Usage Estimation
+### 📈 Energy Usage Estimation
 
 - **Active time** (Boot + Write) ≈ ~2 seconds per 600 seconds (10 minutes)
 - **Sleep time** ≈ ~598 seconds
 - **Average Current Consumption**:
+
 $$
 \text{Average} = \frac{(2\text{s} \times 40\text{mA}) + (598\text{s} \times 0.36\mu\text{A})}{600\text{s}} \approx 133\mu\text{A}
 $$
+
 ---
 
 ## 🔋 Battery Life Estimates
