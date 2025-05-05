@@ -15,10 +15,10 @@ Every 10 minutes, the Arduino wakes up, powers on the SD card, saves 5 lines of 
 
 ---
 
-## Features
+## Features ATMega328p:
 - Wake up every 10 minutes using WDT
 - Save 5 data entries to a uniquely named file (DATAxxx.CSV)
-- Sleep current: < 0.1 µA
+- Sleep current: ~ 0.1 µA
 - Logging current: ~10-20 mA
 - Estimated battery life: 1-2+ years (LiFePO4 or 3xAA)
 
@@ -64,9 +64,9 @@ Every 10 minutes, the Arduino wakes up, powers on the SD card, saves 5 lines of 
   *Measured with power LED and voltage regulator removed.*  
   **Source**: [IoT Experiments](https://www.iot-experiments.com/arduino-pro-mini-power-consumption/)
 
-- **Sleep Mode (SLEEP_MODE_PWR_DOWN)**: ~4.2 µA  
-  *With ADC and BOD disabled.*  
-  **Source**: [IoT Experiments](https://www.iot-experiments.com/arduino-pro-mini-power-consumption/)
+- **Sleep Mode (SLEEP_MODE_PWR_DOWN)**: ~0.1-4.2 µA  
+  *With ADC, LED and BOD disabled.*  
+  **Source**: [IoT Experiments](https://www.iot-experiments.com/arduino-pro-mini-power-consumption/), [Nick Gammon’s Low Power Techniques](http://gammon.com.au/power)
 
 ## Watchdog Timer (WDT)
 - **During Sleep**: ~6 µA  
@@ -131,7 +131,7 @@ Every 10 minutes, the Arduino wakes up, powers on the SD card, saves 5 lines of 
 - [Gough's Tech Zone - SD Power Testing](https://goughlui.com/2021/02/27/experiment-microsd-card-power-consumption-spi-performance/)
 - [Arduino Forum - WDT Sleep](https://forum.arduino.cc/t/arduino-mini-pro-3-3v-8mhz-wake-up-go-to-sleep-times/689112)
 - [NDP6020P Datasheet](https://www.onsemi.com/download/data-sheet/pdf/ndp6020p-d.pdf)
-
+- [Nick Gammon’s Low Power Techniques](http://gammon.com.au/power)
 
 
 ---
